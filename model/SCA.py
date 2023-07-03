@@ -75,8 +75,8 @@ class QKVLinear(nn.Module):
     
 class SCA(nn.Module):
     def __init__(self, dim, num_heads=8, n_win=7, qk_dim=None, qk_scale=None,
-                 kv_per_win=4, kv_downsample_ratio=4, kv_downsample_kernel=1, kv_downsample_mode='identity',
-                 topk=4, param_routing=False, diff_routing=False, soft_routing=False, side_dwconv=3,
+                 kv_per_win=4,topk=4, param_routing=False, diff_routing=False, 
+                 soft_routing=False, side_dwconv=3,
                  auto_pad=False):
         super().__init__()
 
@@ -116,34 +116,9 @@ class SCA(nn.Module):
         self.qkv_y = QKVLinear(self.dim, self.qk_dim)
         self.wo = nn.Linear(dim, dim)
         
-        self.kv_downsample_mode = kv_downsample_mode
         self.kv_per_win = kv_per_win
-        self.kv_downsample_ratio = kv_downsample_ratio
-        self.kv_downsample_kenel = kv_downsample_kernel
-        if self.kv_downsample_mode == 'ada_avgpool':
-            assert self.kv_per_win is not None
-            self.kv_down = nn.AdaptiveAvgPool2d(self.kv_per_win)
-        elif self.kv_downsample_mode == 'ada_maxpool':
-            assert self.kv_per_win is not None
-            self.kv_down = nn.AdaptiveMaxPool2d(self.kv_per_win)
-        elif self.kv_downsample_mode == 'maxpool':
-            assert self.kv_downsample_ratio is not None
-            self.kv_down = nn.MaxPool2d(self.kv_downsample_ratio) if self.kv_downsample_ratio > 1 else nn.Identity()
-        elif self.kv_downsample_mode == 'avgpool':
-            assert self.kv_downsample_ratio is not None
-            self.kv_down = nn.AvgPool2d(self.kv_downsample_ratio) if self.kv_downsample_ratio > 1 else nn.Identity()
-        elif self.kv_downsample_mode == 'identity': # no kv downsampling
-            self.kv_down = nn.Identity()
-        elif self.kv_downsample_mode == 'fracpool':
-            
-            raise NotImplementedError('fracpool policy is not implemented yet!')
-        elif kv_downsample_mode == 'conv':
-
-            raise NotImplementedError('conv policy is not implemented yet!')
-        else:
-            raise ValueError(f'kv_down_sample_mode {self.kv_downsaple_mode} is not surpported!')
-
-
+        self.kv_down = nn.Identity()
+                     
         self.attn_act = nn.Softmax(dim=-1)
 
         self.auto_pad=auto_pad
